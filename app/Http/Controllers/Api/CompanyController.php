@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CompanyJobTrait;
-use App\Http\Traits\Jobable;
+use App\Http\Traits\JobAble;
 use App\Models\ApplicationGroup;
 use App\Models\CompanyBookmarkCategory;
 use App\Models\Earning;

@@ -3,7 +3,7 @@
 namespace App\Services\API\Website\Company\PostingJob;
 
 use App\Http\Traits\CompanyJobTrait;
-use App\Http\Traits\Jobable;
+use App\Http\Traits\JobAble;
 use App\Models\Admin;
 use App\Notifications\Admin\NewEditedJobAvailableNotification;
 use App\Notifications\Website\Company\EditApproveNotification;

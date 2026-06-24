@@ -3,7 +3,7 @@
 namespace App\Services\API\Website;
 
 use App\Http\Resources\Job\JobListResource;
-use App\Http\Traits\Jobable;
+use App\Http\Traits\JobAble;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Job;
@@ -15,7 +15,7 @@ use Modules\Location\Entities\Country;
 
 class JobPageService
 {
-    use Jobable;
+    use JobAble;
 
     public function execute($request)
     {
