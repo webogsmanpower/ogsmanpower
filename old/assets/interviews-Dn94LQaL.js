@@ -1,0 +1,1 @@
+import{d as s}from"./index-BFWN3IEs.js";const a=async()=>(await s.get("/seeker/interviews/upcoming")).data,i=async()=>(await s.get("/seeker/interviews/past")).data,o=async e=>(await s.get(`/seeker/interviews/${e}`)).data,p=async(e,t)=>(await s.post(`/seeker/interviews/${e}/reminder`,{reminder_type:t})).data;export{i as a,o as b,a as g,p as s};

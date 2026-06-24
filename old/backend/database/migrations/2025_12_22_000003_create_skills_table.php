@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Migration: Create skills table for centralized skill management
+ * 
+ * Skills can be uploaded by admin via TXT/CSV and used across job postings
+ */
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('skills', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 100)->unique();
+            $table->string('category')->nullable()->index();
+            $table->boolean('is_active')->default(true)->index();
+            $table->unsignedInteger('usage_count')->default(0);
+            $table->timestamps();
+
+            // Full-text search index for fast lookups
+            $table->fullText('name');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('skills');
+    }
+};

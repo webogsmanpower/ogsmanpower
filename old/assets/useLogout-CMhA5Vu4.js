@@ -1,0 +1,1 @@
+import{u as n,r,a7 as g}from"./index-BFWN3IEs.js";function c(s={}){const o=n(),{redirectTo:e="/auth/signin"}=s,[t,a]=r.useState(!1);return{logout:r.useCallback(async()=>{if(!t){a(!0);try{await g()}catch(u){console.error("Failed to log out",u)}finally{a(!1),o(e,{replace:!0})}}},[t,o,e]),isLoggingOut:t}}export{c as u};

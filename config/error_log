@@ -1,0 +1,64 @@
+[23-Apr-2026 01:51:36 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/database.php on line 18
+[04-May-2026 22:02:59 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/database.php on line 18
+[12-Jun-2026 00:42:07 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php on line 16
+[12-Jun-2026 00:42:07 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/app.php on line 16
+[12-Jun-2026 00:42:07 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php on line 21
+[12-Jun-2026 00:42:07 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/services.php on line 18
+[14-Jun-2026 04:49:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php on line 21
+[14-Jun-2026 04:49:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/database.php on line 18
+[14-Jun-2026 04:49:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/app.php on line 16
+[14-Jun-2026 04:49:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php on line 16
+[14-Jun-2026 04:49:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/services.php on line 18
+[14-Jun-2026 23:52:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/database.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/database.php on line 18
+[14-Jun-2026 23:52:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/services.php on line 18
+[14-Jun-2026 23:52:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/cache.php on line 21
+[14-Jun-2026 23:52:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/mail.php on line 16
+[14-Jun-2026 23:52:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/abdulbas/public_html/ogsmanpower.com/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/abdulbas/public_html/ogsmanpower.com/config/app.php on line 16

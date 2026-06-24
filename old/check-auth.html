@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Auth</title>
+</head>
+<body>
+    <h1>Checking Authentication</h1>
+    <div id="result"></div>
+    
+    <script>
+        const token = localStorage.getItem('ogs_token');
+        const result = document.getElementById('result');
+        
+        if (token) {
+            result.innerHTML = `
+                <p>Token exists: ${token.substring(0, 50)}...</p>
+                <button onclick="testAPI()">Test API</button>
+            `;
+        } else {
+            result.innerHTML = '<p>No token found. Please login first.</p>';
+        }
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const user = await response.json();
+                console.log('User data:', user);
+                result.innerHTML += `<pre>${JSON.stringify(user, null, 2)}</pre>`;
+            } catch (error) {
+                console.error('API error:', error);
+                result.innerHTML += `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

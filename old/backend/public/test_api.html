@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing Plans API</h1>
+    <button onclick="testPlans()">Test Plans API</button>
+    <button onclick="testAddons()">Test Addons API</button>
+    <div id="results"></div>
+
+    <script>
+        async function testPlans() {
+            try {
+                console.log('Testing /api/plans/seeker/subscriptions');
+                const response = await fetch('/api/plans/seeker/subscriptions');
+                const data = await response.json();
+                console.log('Plans response:', data);
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('Plans error:', error);
+                document.getElementById('results').innerHTML = '<div style="color: red;">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function testAddons() {
+            try {
+                console.log('Testing /api/plans/seeker/addons');
+                const response = await fetch('/api/plans/seeker/addons');
+                const data = await response.json();
+                console.log('Addons response:', data);
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('Addons error:', error);
+                document.getElementById('results').innerHTML = '<div style="color: red;">Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

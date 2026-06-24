@@ -1,0 +1,46 @@
+.ogs-header{
+position:relative;
+z-index:1000;
+}
+
+/* HERO */
+
+.hero-section{
+padding:120px 0;
+background:#f8f9fc;
+}
+
+.hero-title{
+font-size:48px;
+font-weight:700;
+}
+
+.hero-subtitle{
+font-size:18px;
+margin:20px 0;
+color:#6c757d;
+}
+
+.hero-img{
+max-height:450px;
+}
+
+/* PROFILE */
+
+.profile-img{
+width:40px;
+height:40px;
+border-radius:50%;
+object-fit:cover;
+}
+
+/* NAVBAR */
+
+.navbar-nav .nav-link{
+font-weight:500;
+margin-right:20px;
+}
+
+.navbar-nav .nav-link.active{
+color:#0d6efd;
+}
