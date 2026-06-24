@@ -1,0 +1,14 @@
+# Ignore all zip archives
+*.zip
+
+# Laravel defaults
+/vendor/
+/node_modules/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+
+# Environment files
+.env
+.env.*
