@@ -10,6 +10,7 @@ use App\Models\Job;
 use App\Models\JobCategory;
 use App\Models\JobRole;
 use App\Models\JobType;
+use App\Models\JobTypeTranslation;
 use App\Models\Skill;
 use App\Models\SkillTranslation;
 use App\Models\Tag;
@@ -20,7 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Modules\Location\Entities\Country;
 
 trait JobAble
@@ -28,8 +28,9 @@ trait JobAble
     protected function getJobs($request)
     {
         $filteredJobs = $this->filterJobs($request)->latest();
-        $featured_jobs = $this->filterJobs($request)->latest()->where('featured', 1)->take(18)->get();
-        $jobs = $filteredJobs->paginate(18)->withQueryString();
+        $featured_jobs = $this->filterJobs($request)->latest()->where('featured', 1)->whereRaw("FIND_IN_SET('public', job_roles)")->deadlineActive()
+            ->take(18)->get();
+        $jobs = $filteredJobs->whereRaw("FIND_IN_SET('public', job_roles)")->paginate(18)->withQueryString();
 
         return [
             'total_jobs' => $jobs->total(),
@@ -58,7 +59,7 @@ trait JobAble
     private function filterJobs($request)
     {
         if (auth()->user()) {
-            $query = Job::with('company.user', 'category', 'job_type:id,name')
+            $query = Job::with('company.user', 'category', 'job_type:id')
                 ->withCount([
                     'bookmarkJobs',
                     'appliedJobs',
@@ -72,7 +73,7 @@ trait JobAble
                 ->active()
                 ->withoutEdited();
         } else {
-            $query = Job::with('company.user', 'category', 'job_type:id,name')
+            $query = Job::with('company.user', 'category', 'job_type:id')
                 ->withCount([
                     'bookmarkJobs',
                     'appliedJobs',
@@ -93,15 +94,6 @@ trait JobAble
             $query->whereHas('company.user', function ($q) use ($company) {
                 $q->where('username', $company);
             });
-        }
-
-        // Keyword search
-        if ($request->has('keyword') && $request->keyword != null) {
-            $keyword = $request->get('keyword');
-            if (is_array($keyword)) {
-                $keyword = $keyword[0];
-            }
-            $query->where('title', 'LIKE', "%$keyword%");
         }
 
         // Category filter
@@ -141,20 +133,44 @@ trait JobAble
             $query->where('id', '<', $request->id);
         }
 
-        // location
+        // Location
         $final_address = '';
         if ($request->has('location') && $request->location != null) {
-            $adress = $request->location;
-            if ($adress) {
-                $adress_array = explode(' ', $adress);
-                if ($adress_array) {
-                    $last_two = array_splice($adress_array, 0, 2);
+            $address = $request->location;
+
+            // Replace special characters and split the location by commas or plus signs
+            $address_array = preg_split('/[,+\s]+/', $address);
+            $address_array = array_map('trim', $address_array); // Trim spaces
+            $address_array = array_filter($address_array); // Remove empty elements
+
+            // Prepare the query to match any part of the address
+            $query->where(function ($query) use ($address_array) {
+                foreach ($address_array as $part) {
+                    $query->orWhere('country', 'LIKE', '%'.$part.'%')
+                        ->orWhere('address', 'LIKE', '%'.$part.'%');
                 }
-                $final_address = Str::slug(implode(' ', $last_two));
-                $query->Where('country', 'LIKE', '%'.$request->location.'%')
-                    ->orWhere('address', 'LIKE', '%'.$final_address.'%');
-            }
+            });
         }
+
+        // Keyword search
+        if ($request->has('keyword') && $request->keyword != null) {
+            session(['header_search_role' => 'job']);
+
+            $keyword = $request->get('keyword');
+            if (is_array($keyword)) {
+                $keyword = $keyword[0];
+            }
+
+            $query->where(function ($q) use ($keyword, $final_address) {
+                $q->where('title', 'LIKE', "%$keyword%")->orWhere('description', 'LIKE', "%$keyword%");
+
+                // Adding location constraint to keyword search
+                if (! empty($final_address)) {
+                    $q->orWhere('address', 'LIKE', '%'.$final_address.'%');
+                }
+            });
+        }
+
         // lat Long
         if ($request->has('lat') && $request->has('long') && $request->lat != null && $request->long != null) {
             session()->forget('selected_country');
@@ -166,6 +182,7 @@ trait JobAble
 
         if ($selected_country && $selected_country != null) {
             $country = selected_country()->name;
+
             $query->where('country', 'LIKE', "%$country%");
         } else {
             $setting = loadSetting();
@@ -210,7 +227,7 @@ trait JobAble
 
         // Job type filter
         if ($request->has('job_type') && $request->job_type != null) {
-            $job_type_id = JobType::where('name', $request->job_type)->value('id');
+            $job_type_id = JobTypeTranslation::where('name', $request->job_type)->value('job_type_id');
             $query->where('job_type_id', $job_type_id);
         }
 
@@ -231,25 +248,28 @@ trait JobAble
     private function getJobsCategory($request, $slug)
     {
         if (auth()->user()) {
-
-            $query = Job::with('company.user', 'job_type:id,name')
+            $query = Job::with('company.user', 'job_type:id')
                 ->withCount([
-                    'bookmarkJobs', 'appliedJobs',
+                    'bookmarkJobs',
+                    'appliedJobs',
                     'bookmarkJobs as bookmarked' => function ($q) {
                         $q->where('candidate_id', currentCandidate() ? currentCandidate()->id : '');
-                    }, 'appliedJobs as applied' => function ($q) {
+                    },
+                    'appliedJobs as applied' => function ($q) {
                         $q->where('candidate_id', currentCandidate() ? currentCandidate()->id : '');
                     },
                 ])
-                ->active()->withoutEdited();
+                ->active()
+                ->withoutEdited();
         } else {
-
-            $query = Job::with('company.user', 'job_type:id,name')
+            $query = Job::with('company.user', 'job_type:id')
                 ->withCount([
-                    'bookmarkJobs', 'appliedJobs',
+                    'bookmarkJobs',
+                    'appliedJobs',
                     'bookmarkJobs as bookmarked' => function ($q) {
                         $q->where('candidate_id', '');
-                    }, 'appliedJobs as applied' => function ($q) {
+                    },
+                    'appliedJobs as applied' => function ($q) {
                         $q->where('candidate_id', '');
                     },
                 ])
@@ -263,11 +283,6 @@ trait JobAble
             $query->whereHas('company.user', function ($q) use ($company) {
                 $q->where('username', $company);
             });
-        }
-
-        // Keyword search
-        if ($request->has('keyword') && $request->keyword != null) {
-            $query->where('title', 'LIKE', "%$request->keyword%");
         }
 
         // Category filter
@@ -307,22 +322,44 @@ trait JobAble
         // location
         $final_address = '';
         if ($request->has('location') && $request->location != null) {
-            $adress = $request->location;
-            if ($adress) {
-                $adress_array = explode(' ', $adress);
-                if ($adress_array) {
-                    $last_two = array_splice($adress_array, -2);
+            $address = $request->location;
+
+            // Replace special characters and split the location by commas or plus signs
+            $address_array = preg_split('/[,+\s]+/', $address);
+            $address_array = array_map('trim', $address_array); // Trim spaces
+            $address_array = array_filter($address_array); // Remove empty elements
+
+            // Prepare the query to match any part of the address
+            $query->where(function ($query) use ($address_array) {
+                foreach ($address_array as $part) {
+                    $query->orWhere('country', 'LIKE', '%'.$part.'%')
+                        ->orWhere('address', 'LIKE', '%'.$part.'%');
                 }
-                $final_address = Str::slug(implode(' ', $last_two));
-            }
-        }
-        // lat Long
-        if ($request->has('lat') && $request->has('long') && $request->lat != null && $request->long != null) {
-            session()->forget('selected_country');
-            $query->Where('address', $final_address ? $final_address : '')
-                ->orWhere('country', $request->location ? $request->location : '');
+            });
         }
 
+        $final_address = '';
+        // Keyword search
+        if ($request->has('keyword') && $request->keyword != null) {
+            session(['header_search_role' => 'job']);
+
+            $keyword = $request->get('keyword');
+            if (is_array($keyword)) {
+                $keyword = $keyword[0];
+            }
+
+            $query->where(function ($q) use ($keyword) {
+                $q->where('title', 'LIKE', "%$keyword%")->orWhere('description', 'LIKE', "%$keyword%");
+
+            });
+
+        }
+
+        // lat Long
+        // if ($request->has('lat') && $request->has('long') && $request->lat != null && $request->long != null) {
+        //     session()->forget('selected_country');
+        //     $query->Where('address', $final_address ? $final_address : '')->orWhere('country', $request->location ? $request->location : '');
+        // }
         // country
         $selected_country = session()->get('selected_country');
 
@@ -330,11 +367,9 @@ trait JobAble
             $country = selected_country()->name;
             $query->where('country', 'LIKE', "%$country%");
         } else {
-
             $setting = loadSetting();
             if ($setting->app_country_type == 'single_base') {
                 if ($setting->app_country) {
-
                     $country = Country::where('id', $setting->app_country)->first();
                     if ($country) {
                         $query->where('country', 'LIKE', "%$country->name%");
@@ -374,12 +409,11 @@ trait JobAble
 
         // Job type filter
         if ($request->has('job_type') && $request->job_type != null) {
-            $job_type_id = JobType::where('name', $request->job_type)->value('id');
+            $job_type_id = JobTypeTranslation::where('name', $request->job_type)->value('job_type_id');
             $query->where('job_type_id', $job_type_id);
         }
-
-        $featured_jobs = $query->latest()->where('featured', 1)->take(20)->get();
         $jobs = $query->latest()->paginate(20)->withQueryString();
+        $featured_jobs = $query->latest()->where('featured', 1)->take(20)->get();
 
         return [
             'total_jobs' => $jobs->total(),
@@ -555,6 +589,7 @@ trait JobAble
 
     private function getIndeedJobs(Request $request, $limit = null, $page = null)
     {
+        return [];
         if (config('templatecookie.default_job_provider') == 'indeed' && config('templatecookie.indeed_id')) {
             $keyword = $request->keyword ?? '';
             // $id = JobCategory::where('slug', $request->category)->first();
@@ -607,6 +642,7 @@ trait JobAble
 
     private function getIndeedJobsCategory(Request $request, $limit, $page, $slug)
     {
+        return [];
         if (config('templatecookie.default_job_provider') == 'indeed' && config('templatecookie.indeed_id')) {
             $keyword = $request->keyword ?? '';
             $id = JobCategory::where('slug', $slug)->first();
@@ -645,7 +681,7 @@ trait JobAble
                 // 'co' => 'United Kingdom'
             ];
             $param = http_build_query($data)."\n";
-            $url = 'http://api.indeed.com/ads/apisearch?'.$param;
+            $url = 'http://api.indeed.com/ads/apisearch?'.urlencode($param);
 
             header('Content-type: application/json');
             $obj = file_get_contents($url);
@@ -677,7 +713,6 @@ trait JobAble
                 'sort' => 'date',
                 'pagesize' => $pagesize,
                 'affid' => config('templatecookie.careerjet_id'),
-
             ]);
 
             return $result;
@@ -706,7 +741,6 @@ trait JobAble
                 'sort' => 'date',
                 'pagesize' => $pagesize,
                 'affid' => config('templatecookie.careerjet_id'),
-
             ]);
 
             return $result;
@@ -791,12 +825,10 @@ trait JobAble
             $tagsArray = [];
 
             foreach ($tags as $tag) {
-                $tag_exists = TagTranslation::where('name', $tag)->first();
+                $tag_exists = TagTranslation::where('tag_id', $tag)->first();
 
                 if ($tag_exists) {
-                    $taggable = TagTranslation::where('tag_id', $tag)
-                        ->orWhere('name', $tag)
-                        ->exists();
+                    $taggable = TagTranslation::where('tag_id', $tag)->orWhere('name', $tag)->exists();
 
                     if (! $taggable) {
                         $new_tag = Tag::create(['name' => $tag]);
@@ -824,12 +856,10 @@ trait JobAble
             $tagsArray = [];
 
             foreach ($tags as $tag) {
-                $tag_exists = TagTranslation::where('name', $tag)->first();
+                $tag_exists = TagTranslation::where('tag_id', $tag)->first();
 
                 if ($tag_exists) {
-                    $taggable = TagTranslation::where('tag_id', $tag)
-                        ->orWhere('name', $tag)
-                        ->first();
+                    $taggable = TagTranslation::where('tag_id', $tag)->orWhere('name', $tag)->first();
 
                     if (! $taggable) {
                         $new_tag = Tag::create(['name' => $tag]);
@@ -857,9 +887,7 @@ trait JobAble
             $skillsArray = [];
 
             foreach ($skills as $skill) {
-                $skill_exists = SkillTranslation::where('skill_id', $skill)
-                    ->orWhere('name', $skill)
-                    ->first();
+                $skill_exists = SkillTranslation::where('skill_id', $skill)->orWhere('name', $skill)->first();
 
                 if (! $skill_exists) {
                     $select_skill = Skill::create(['name' => $skill]);
@@ -886,9 +914,7 @@ trait JobAble
             $skillsArray = [];
 
             foreach ($skills as $skill) {
-                $skill_exists = SkillTranslation::where('skill_id', $skill)
-                    ->orWhere('name', $skill)
-                    ->first();
+                $skill_exists = SkillTranslation::where('skill_id', $skill)->orWhere('name', $skill)->first();
 
                 if (! $skill_exists) {
                     $select_skill = Skill::create(['name' => $skill]);
@@ -925,11 +951,7 @@ trait JobAble
 
     public function popularTags()
     {
-        return Tag::popular()
-            ->withCount('tags')
-            ->latest('tags_count')
-            ->get()
-            ->take(10);
+        return Tag::popular()->withCount('tags')->latest('tags_count')->get()->take(10);
     }
 
     /**
@@ -1033,7 +1055,7 @@ trait JobAble
             return __('benefit_already_exists');
         }
 
-        $translation = new Benefit();
+        $translation = new Benefit;
         $translation->company_id = currentCompany()->id;
         $translation->save();
 
