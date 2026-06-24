@@ -2,4 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/abdulbas/public_html/ogsmanpower.com
-    - /bin/cp -R . $DEPLOYPATH
+    - rsync -av --exclude='.env' --exclude='storage/' --exclude='.git/' . $DEPLOYPATH
