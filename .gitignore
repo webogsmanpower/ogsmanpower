@@ -12,3 +12,7 @@
 # Environment files
 .env
 .env.*
+
+# Server-generated log files
+error_log
+*.log
