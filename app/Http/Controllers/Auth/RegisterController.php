@@ -86,10 +86,11 @@ class RegisterController extends Controller
                     'max:255',
                     'unique:users',
                 ],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'password' => ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[A-Z])(?=.*\d).+$/'],
                 'g-recaptcha-response' => config('captcha.active') ? 'required|captcha' : '',
             ],
             [
+                'password.regex'               => 'Password must contain at least one uppercase letter and one number.',
                 'g-recaptcha-response.required' => 'Please verify that you are not a robot.',
                 'g-recaptcha-response.captcha' => 'Captcha error! try again later or contact site admin.',
             ],

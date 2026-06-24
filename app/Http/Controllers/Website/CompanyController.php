@@ -83,15 +83,18 @@ class CompanyController extends Controller
     public function downloadApplicantResume($candidate_id, $job_id)
     {
         try {
-            // dd('asdfg');
+            // Verify the requesting company owns this application
+            $appliedJob = AppliedJob::where('candidate_id', $candidate_id)
+                ->where('job_id', $job_id)
+                ->where('company_id', currentCompany()->id)
+                ->firstOrFail();
+
             $candidate = Candidate::with(['user', 'socialInfo', 'attributes' => function ($query) {
-                $query->whereNotNull('attribute_value') // Select attributes with non-null values
-                    ->where('is_active', 1); // Select only active attributes
+                $query->whereNotNull('attribute_value')
+                    ->where('is_active', 1);
             }])
                 ->where('id', $candidate_id)
-                ->first();
-            $appliedJob = AppliedJob::where('candidate_id', $candidate_id)->where('job_id', $job_id)->first();
-            // dd($appliedJob->resume_format);
+                ->firstOrFail();
             $contactInfo = ContactInfo::where('user_id', $candidate->user_id)->first();
             $contact = $contactInfo ? $contactInfo : '';
 
@@ -119,7 +122,7 @@ class CompanyController extends Controller
 
             $view = $viewMap[$appliedJob->resume_format] ?? $viewMap['general_format'];
             // $qrCode = base64_encode(QrCode::format('png')->size(80)->generate('https://example.com/candidate/'.$candidate->id));
-            $qrCode = QrCode::size(70)->generate('https://dev.ogstravel.com/candidate/' . $candidate->id);
+            $qrCode = QrCode::size(70)->generate(config('app.url') . '/candidate/' . $candidate->id);
 
             $data = [
                 'candidate' => $candidate,
@@ -155,15 +158,18 @@ class CompanyController extends Controller
     }
     public function applicationDetail($candidate_id, $job_id)
     {
-
         try {
-
+            // Verify the requesting company owns this application
+            $candiateJob = AppliedJob::where('candidate_id', $candidate_id)
+                ->where('job_id', $job_id)
+                ->where('company_id', currentCompany()->id)
+                ->firstOrFail();
 
             $candidate = Candidate::with('skills', 'languages:id,name', 'profession')->findOrFail($candidate_id);
             $user = User::with('socialInfo', 'contactInfo')->findOrFail($candidate->user_id);
             $appliedJobs = $candidate->appliedJobs()->with('company.user', 'category', 'role')->get();
             $bookmarkJobs = $candidate->bookmarkJobs()->with('company.user', 'category', 'role')->get();
-            $candiateJob = AppliedJob::where('candidate_id', $candidate_id)->where('job_id', $job_id)->first();
+
             return view('frontend.pages.company.application-detail', compact('candidate', 'user', 'appliedJobs', 'bookmarkJobs', 'candiateJob'));
         } catch (\Exception $e) {
             flashError('An error occurred: ' . $e->getMessage());
@@ -179,7 +185,10 @@ class CompanyController extends Controller
             'status' => 'required|in:selected,rejected,shortlisted,pending',
         ]);
 
-        $application = AppliedJob::find($validated['id']);
+        $application = AppliedJob::where('id', $validated['id'])
+            ->where('company_id', currentCompany()->id)
+            ->firstOrFail();
+
         $application->status = $validated['status'];
         $application->save();
 
@@ -188,7 +197,6 @@ class CompanyController extends Controller
 
     public function candidate_status()
     {
-        // dd('hj');
         $company_id = auth()->user()->company->id;
         $candidates = AppliedJob::with(['candidate', 'applicationGroup', 'job'])
             ->where('company_id', $company_id)
@@ -198,13 +206,21 @@ class CompanyController extends Controller
             //     $query->whereIn('name', ['Shortlisted', 'Selected']);
             // })
             ->paginate(10);
-        // dd($candidates);
         return view('frontend.pages.company.candidate_status', compact('candidates'));
     }
     public function approvedCandidateStatus(Request $request)
     {
-        $candidate = AppliedJob::with('applicationGroup', 'job', 'candidate')->where('candidate_id', $request->candidate_id)->where('job_id', $request->job_id)->first();
-        $assignCandidates = CandidateStatus::where('candidate_id', $request->candidate_id)->where('job_id', $request->job_id)->where('is_approved', 1)->paginate('10');
+        $candidate = AppliedJob::with('applicationGroup', 'job', 'candidate')
+            ->where('candidate_id', $request->candidate_id)
+            ->where('job_id', $request->job_id)
+            ->where('company_id', currentCompany()->id)
+            ->firstOrFail();
+
+        $assignCandidates = CandidateStatus::where('candidate_id', $request->candidate_id)
+            ->where('job_id', $request->job_id)
+            ->where('is_approved', 1)
+            ->paginate(10);
+
         return view('frontend.pages.company.approved-candidate-status', compact('candidate', 'assignCandidates'));
     }
     public function dynamic_input($id)
@@ -1374,31 +1390,34 @@ class CompanyController extends Controller
             return back();
         }
     }
-   public function forwardCandidateEmail(Request $request)
-{
-    try {
+    public function forwardCandidateEmail(Request $request)
+    {
+        try {
+            $request->validate([
+                'candidate_id' => 'required|exists:candidates,id',
+                'job_id'       => 'required|exists:jobs,id',
+                'email'        => 'required|email',
+                'docs'         => 'nullable|array',
+                'docs.*'       => 'in:cv,photo,passport,video',
+            ]);
 
-        $request->validate([
-            'candidate_id'=>'required',
-            'job_id'=>'required',
-            'email'=>'required|email'
-        ]);
+            // Verify this company actually received an application from this candidate
+            AppliedJob::where('candidate_id', $request->candidate_id)
+                ->where('job_id', $request->job_id)
+                ->where('company_id', currentCompany()->id)
+                ->firstOrFail();
 
-        $candidate = Candidate::with('user')->findOrFail($request->candidate_id);
+            $candidate = Candidate::with('user')->findOrFail($request->candidate_id);
+            $docs = $request->docs ?? [];
 
-        $docs = $request->docs ?? [];
+            Mail::to($request->email)
+                ->send(new ForwardCandidateMail($candidate, $request->job_id, $docs));
 
-        Mail::to($request->email)
-            ->send(new ForwardCandidateMail($candidate,$request->job_id,$docs));
-
-        return back()->with('success','Candidate sent successfully');
-
-    } catch (\Exception $e) {
-
-        return back()->with('error',$e->getMessage());
-
+            return back()->with('success', 'Candidate sent successfully');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
-}
     public function hire_request(Request $request)
     {
         $request->validate([

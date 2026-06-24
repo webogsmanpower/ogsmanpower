@@ -165,7 +165,6 @@ class CandidateController extends Controller
                 ->whereIn('status', ['Shortlisted', 'Selected'])
                 ->whereNotNull('candidate_id')
                 ->paginate(10);
-// dd($candidates);
             $agents = Admin::whereHas('roles', function ($query) {
                 $query->where('name', 'agent');
             })
@@ -357,7 +356,6 @@ class CandidateController extends Controller
             ];
 
             $view = $viewMap[$request->format] ?? $viewMap['bilangual_format'];
-            // dd($view);
             // $qrCode = base64_encode(QrCode::format('png')->size(70)->generate('https://example.com/candidate/'.$candidate->id));
             $qrCode = QrCode::size(70)->generate('https://example.com/candidate/' . $candidate->id);
 
@@ -459,7 +457,6 @@ class CandidateController extends Controller
             }
 
             $candidates = $query->paginate(10)->withQueryString();
-            // dd($candidates);
 
             return view('backend.candidate.index', compact('candidates'));
         } catch (\Exception $e) {
@@ -687,8 +684,6 @@ class CandidateController extends Controller
      */
     public function store(CandidateRequest $request)
     {
-        // dd('qq');
-
         abort_if(! userCan('candidate.create'), 403);
         $location = session()->get('location');
         if (! $location) {
@@ -767,7 +762,6 @@ class CandidateController extends Controller
                 $country = SearchCountry::where('id', $jobsRequirments->search_country_id)->first();
                 $city = City::where('id', $jobsRequirments->city_id)->first();
                 $state = State::where('id', $jobsRequirments->state_id)->first();
-                // dd($state);
             }
 
             $candidateDocument = CandidateDocument::where('candidate_id', $candidate->id)->first();
@@ -903,9 +897,7 @@ class CandidateController extends Controller
             // Location
             updateMap($candidate);
 
-            // skills
             $skills = $request->skills ?? [];
-            // dd($skills);
 
             if ($skills) {
                 $skillsArray = [];
@@ -976,7 +968,6 @@ class CandidateController extends Controller
 
             // Save the attachment (insert or update)
             $attachment->save();
-            // dd($request->input('dynamic_inputs'));
             if ($request->input('dynamic_inputs') != '' && $request->input('dynamic_inputs') != Null) {
 
                 foreach ($request->input('dynamic_inputs') as $inputData) {

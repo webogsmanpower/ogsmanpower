@@ -154,16 +154,10 @@ class JobController extends Controller
 
     public function assignRoles(Request $request, $jobId)
     {
-        // dd($request->all());
-        // Validate the incoming roles
         $request->validate([
             'roles' => 'nullable|array',
-            // 'roles.*' => 'exists:roles,name', // Validate that role names exist in the roles table
         ]);
-        // dd($request->roles);
-        // Find the job
         $job = Job::findOrFail($jobId);
-        // dd($jobs);
 
         $roles = implode(',', $request->roles ?? []);
 
@@ -190,7 +184,6 @@ class JobController extends Controller
             foreach ($jobs as $job) {
                 $job->assigned_roles = explode(',', $job->job_roles); // Convert job_roles to an array
             }
-            // dd( $jobs[0]->assigned_roles);
 
             return view('backend.Job.index', [
                 'jobs' => $jobs,
@@ -249,7 +242,6 @@ class JobController extends Controller
             foreach ($jobs as $job) {
                 $job->assigned_roles = explode(',', $job->job_roles); // Convert job_roles to an array
             }
-            // dd( $jobs[0]->assigned_roles);
 
             return view('backend.Job.apply-job', [
                 'jobs' => $jobs,

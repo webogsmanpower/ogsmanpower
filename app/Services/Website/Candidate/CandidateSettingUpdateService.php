@@ -41,7 +41,6 @@ class CandidateSettingUpdateService
         $request->session()->put('type', $request->type);
 
         if ($request->type == 'basic') {
-            // dd($request->all());
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
             $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 25 : 0]);
             flashSuccess(__('profile_updated'));
@@ -49,8 +48,6 @@ class CandidateSettingUpdateService
             return back();
         }
         if ($request->type == 'jobRequirements') {
-            // dd($request->all());
-
             $this->jobRequirments($request, $candidate);
             flashSuccess(__('profile_updated'));
 
@@ -303,7 +300,6 @@ class CandidateSettingUpdateService
 
     public function jobRequirments($request, $candidate)
     {
-        // dd($request->all());
         $request->validate([
             'jobs' => 'required|array',
             'industries' => 'required|array',
@@ -647,10 +643,14 @@ class CandidateSettingUpdateService
     }
     public function documentUpdate($request)
     {
-        // Validate request input
         $request->validate([
-            'passport_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'license_image'  => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'passport_image'               => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
+            'license_image'                => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:5120',
+            'cnic_front'                   => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'cnic_back'                    => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'police_character_certificate' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'medical'                      => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'navtec_report'                => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
         ]);
 
         // Get the authenticated candidate

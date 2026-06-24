@@ -51,8 +51,6 @@ Route::prefix('admin')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login.admin')->middleware('prevent_cache');
     Route::post('/login', [LoginController::class, 'login'])->name('admin.login')->middleware('prevent_cache');
     Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
-    Route::get('view_cv/{candidate}', [CandidateController::class, 'view_cv'])->name('admin.view_cv');
-
 
     Route::middleware(['guest:admin'])->group(function () {
         Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('admin.password.email');
@@ -62,6 +60,9 @@ Route::prefix('admin')->group(function () {
     });
 
     Route::middleware(['auth:admin', 'otp.verified', 'profile.approved'])->group(function () {
+        // Candidate CV view (auth required)
+        Route::get('view_cv/{candidate}', [CandidateController::class, 'view_cv'])->name('admin.view_cv');
+
         //Dashboard Route
         Route::get('/', [AdminController::class, 'dashboard'])->middleware('prevent_cache');
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('prevent_cache');

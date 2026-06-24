@@ -307,7 +307,8 @@ Route::middleware('auth:user', 'verified', 'otp.verified')->group(function () {
             Route::get('/download-applicant-resume/{candidate_id}/{job_id}', 'downloadApplicantResume')->name('download.applicant.resume');
             Route::get('/application-detail/{candidate_id}/{job_id}', 'applicationDetail')->name('application.detail');
             Route::post('/forward-candidate-email', 'forwardCandidateEmail')
-    ->name('forward.candidate.email');
+                ->name('forward.candidate.email')
+                ->middleware('throttle:10,60');
             //hire requst
             Route::post('/hire-request', 'hire_request')->name('hire-request');
         });
@@ -372,5 +373,5 @@ Route::controller(PayPalController::class)->group(function () {
 });
 // ===================OTP Verfication====================
 Route::get('/otp/verify', [OTPController::class, 'showVerifyForm'])->name('otp.verify');
-Route::post('/send-otp', [OTPController::class, 'sendOTP'])->name('send.otp');
-Route::post('/verify-otp', [OTPController::class, 'verifyOTP'])->name('verify.otp');
+Route::post('/send-otp', [OTPController::class, 'sendOTP'])->name('send.otp')->middleware('throttle:3,5');
+Route::post('/verify-otp', [OTPController::class, 'verifyOTP'])->name('verify.otp')->middleware('throttle:5,1');

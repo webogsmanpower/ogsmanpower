@@ -36,7 +36,6 @@ class AgentController extends Controller
 
     public function contractForm()
     {
-        // dd('asa');
         $contract = Contract::first();
 
         return view('backend.agent.contract', compact('contract'));
@@ -51,7 +50,6 @@ class AgentController extends Controller
     {
         // Find the contract for the given admin ID
         $contract = ContractAgreement::where('admin_id', $id)->first();
-        // dd($id);
 
         // Check if the contract exists
         if ($contract) {
@@ -95,7 +93,6 @@ class AgentController extends Controller
             }
             $roles = Role::where('id','!=',1)->get();
             $agents = $query->paginate(10)->withQueryString();
-            // dd($candidates);
 
             return view('backend.agent.index', compact('agents','roles'));
         } catch (\Exception $e) {
@@ -250,7 +247,6 @@ class AgentController extends Controller
             'agent_id' => 'required|exists:users,id',
             'role' => 'required|exists:roles,name',
         ]);
-        // dd('das');
 
         $agent = Admin::findOrFail($request->agent_id);
 
